@@ -10,8 +10,15 @@ module workshop_javafx_jdbc {
 	
 	
 	 
-	opens application to javafx.graphics, javafx.fxml;
+	opens application to javafx.graphics, javafx.fxml, javafx.base;
+	
+	opens model.entities to javafx.fxml, javafx.base;
+	opens model.services to javafx.fxml, javafx.base;
 	opens gui to javafx.fxml;	
+
+	
 	exports gui to javafx.fxml;
+	exports model.entities to javafx.fxml;
+	exports model.services to javafx.fxml;
 }
 
