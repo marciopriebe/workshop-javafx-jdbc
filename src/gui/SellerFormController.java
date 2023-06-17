@@ -1,8 +1,13 @@
 package gui;
 
 import java.net.URL;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -17,17 +22,18 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Seller;
 import model.exceptions.ValidationException;
-import model.services.DepartamentService;
+import model.services.SellerService;
 
 public class SellerFormController implements Initializable {
 
 	private Seller entity;
 
-	private DepartamentService service;
+	private SellerService service;
 
 	private List<DataChangeListener> dataChangeListener = new ArrayList<>();
 
@@ -36,9 +42,27 @@ public class SellerFormController implements Initializable {
 
 	@FXML
 	private TextField txtName;
+	
+	@FXML
+	private TextField txtEmail;
+	
+	@FXML
+	private DatePicker dpBirthDate;
+	
+	@FXML
+	private TextField txtBaseSalary;
 
 	@FXML
 	private Label labelErroName;
+	
+	@FXML
+	private Label labelErroEmail;
+	
+	@FXML
+	private Label labelErroBirthDate;
+	
+	@FXML
+	private Label labelErroBaseSalary;
 
 	@FXML
 	private Button btSave;
@@ -51,7 +75,7 @@ public class SellerFormController implements Initializable {
 		dataChangeListener.add(listener);
 	}
 
-	public void setSellerService(DepartamentService service) {
+	public void setSellerService(SellerService service) {
 		this.service = service;
 	}
 
@@ -92,11 +116,31 @@ public class SellerFormController implements Initializable {
 
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
 
-		if (txtName.getText() == null || txtName.getText().trim().equals(" ")) {
+		if (txtName.getText() == null || txtName.getText().trim().equals("")) {
 			exception.addError("name", "Field can´t be empty");
 		}
 
 		obj.setName(txtName.getText());
+		
+		if (txtEmail.getText() == null || txtEmail.getText().trim().equals("")) {
+			exception.addError("email", "Field can't be empty");
+		}
+		obj.setEmail(txtEmail.getText());
+		
+		if (dpBirthDate.getValue() == null) {
+			exception.addError("birthDate", "Field can't be empty");
+		}
+		else {
+			Instant instant = Instant.from(dpBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+			obj.setBirthDate(Date.from(instant));
+		}
+		
+		if (txtBaseSalary.getText() == null || txtBaseSalary.getText().trim().equals("")) {
+			exception.addError("baseSalary", "Field can't be empty");
+		}
+//		obj.setBaseSalary(Utils.tryParseToDouble(txtBaseSalary.getText()));
+//		
+//		obj.setDepartment(comboBoxDepartment.getValue());
 
 		if (exception.getErrors().size() > 0) {
 			throw exception;
@@ -114,11 +158,15 @@ public class SellerFormController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
 		initializeNodes();
+		
 	}
 
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(txtId);
-		Constraints.setTextFieldMaxLength(txtName, 30);
+		Constraints.setTextFieldMaxLength(txtName, 70);
+		Constraints.setTextFieldDouble(txtBaseSalary);
+		Constraints.setTextFieldMaxLength(txtEmail, 60);
+//		Utils.getFormattedDateFromDatePicker(dpBirthDate);
 	}
 
 	public void updateFormData() {
@@ -127,9 +175,17 @@ public class SellerFormController implements Initializable {
 		}
 		txtId.setText(String.valueOf(entity.getId()));
 		txtName.setText(entity.getName());
+		txtEmail.setText(entity.getEmail());	
+		Locale.setDefault(Locale.US);
+		txtBaseSalary.setText(String.format("%.2f", entity.getBaseSalary()));
+		
+		
+		if (entity.getBirthDate() != null) {			
+			dpBirthDate.setValue(LocalDate.ofInstant(entity.getBirthDate().toInstant(), ZoneId.systemDefault()));
+		}
+		
+		
 	}
-
-	@SuppressWarnings("unused")
 	private void setErrorMessages(Map<String, String> errors) {
 		Set<String> fields = errors.keySet();
 
